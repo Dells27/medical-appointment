@@ -7,7 +7,6 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
 using System.Text.Json;
-using static NotificationService.Application.DTOs.EventDTO;
 
 namespace NotificationService.Infrastructure.Workers;
 
@@ -70,8 +69,9 @@ public class AppointmentEventsWorker : BackgroundService
             var body = ea.Body.ToArray();
             var json = Encoding.UTF8.GetString(body);
 
-            _logger.LogInformation("Evento recibido: {RoutingKey}", routingKey);
-
+            _logger.LogInformation(
+                "Evento recibido: {RoutingKey}",
+                routingKey);
             try
             {
                 // Cada request necesita su propio scope porque los handlers son Scoped

@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static NotificationService.Application.DTOs.EventDTO;
 
 namespace NotificationService.Application.UsesCases.HandleAppointmentCreated;
 
@@ -27,6 +26,8 @@ public class HandleAppointmentCreatedHandler
 public async Task Handle(AppointmentCreatedEvent appointmentCreatedEvent)
     {
         var recipientEmail= appointmentCreatedEvent.PatientEmail;
+
+        // Debug temporal — borrar después
         var subject = "Medical appointment confirmation";
         var htmlbody = $@"
 <h2>Your medical appointment has been scheduled.</h2>
@@ -42,7 +43,6 @@ public async Task Handle(AppointmentCreatedEvent appointmentCreatedEvent)
         }
         catch (Exception ex)
         {
-            await _emailService.SendEmailAsync(recipientEmail, subject, htmlbody);
             var log = Notification.CreateError("appointment.created", recipientEmail, subject, ex.Message);
             await _notificationRepository.AddAsync(log);
 

@@ -75,7 +75,7 @@ public class CreateAppointmentHandler
             doctorId = appointment.doctorId,
             appointmentDate = appointment.appointmentDate,
             appointmentTime = appointment.appointmentTime,
-                PatientEmail = request.PatientEmail
+            PatientEmail = request.PatientEmail
 
         });
 

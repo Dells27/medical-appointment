@@ -4,9 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NotificationService.Application.DTOs
-{
-    public class EventDTO
+
+    namespace NotificationService.Application.DTOs
     {
         public class AppointmentCreatedEvent
         {
@@ -18,7 +17,6 @@ namespace NotificationService.Application.DTOs
             public string PatientEmail { get; set; } = string.Empty;
         }
 
-
         public class AppointmentCancelledEvent
         {
             public Guid appointmentId { get; set; }
@@ -27,4 +25,4 @@ namespace NotificationService.Application.DTOs
             public string reason { get; set; } = string.Empty;
         }
     }
-}
+

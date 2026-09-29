@@ -39,8 +39,9 @@ public class AppointmentController : ControllerBase
             var patientId = GetUserId();
             request.PatientID = patientId;
             // Leer el email del token
-            request.PatientEmail = User.FindFirst("email")?.Value ?? string.Empty;
-
+            request.PatientEmail =
+                User.FindFirst(ClaimTypes.Email)?.Value
+                ?? string.Empty;
             var response = await _createAppointmentHandler.Handle(request);
             return CreatedAtAction(nameof(GetById), new { id = response.Id }, response);
         }
