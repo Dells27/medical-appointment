@@ -68,4 +68,12 @@ namespace AppointmentService.Application.DTOs
         public string reason { get; set; } = string.Empty;
     }
 
+
+    public class AppointmentCompletedEvent
+    {
+        public Guid appointmentId { get; set; }
+        public Guid patientId { get; set; }
+        public Guid doctorId { get; set; }
+        public DateTime appointmentDate { get; set; }
+    }
 }

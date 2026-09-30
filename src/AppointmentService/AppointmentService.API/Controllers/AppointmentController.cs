@@ -1,6 +1,7 @@
 ﻿using AppointmentService.Application.DTOs;
 using AppointmentService.Application.UseCases.CreateAppointment;
 using AppointmentService.Application.UsesCases.GetAppointment;
+using AppointmentService.Application.UsesCases.CompleteAppointmentHandler;
 using AppointmentService.Application.UsesCases.CancelAppointment;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,15 +16,18 @@ public class AppointmentController : ControllerBase
     private readonly CreateAppointmentHandler _createAppointmentHandler;
     private readonly CancelAppointmentHandler _cancelAppointmentHandler;
     private readonly GetAppointmentService _getAppointmentsHandler;
+    private readonly CompleteAppointmentHandler _completeAppointmentHandler;
 
     public AppointmentController(
         CreateAppointmentHandler createAppointmentHandler,
         CancelAppointmentHandler cancelAppointmentHandler,
-        GetAppointmentService getAppointmentsHandler)
+        GetAppointmentService getAppointmentsHandler,
+        CompleteAppointmentHandler completeAppointmentHandler)
     {
         _createAppointmentHandler = createAppointmentHandler;
         _cancelAppointmentHandler = cancelAppointmentHandler;
         _getAppointmentsHandler = getAppointmentsHandler;
+        _completeAppointmentHandler = completeAppointmentHandler;
     }
 
     // ============================================================
@@ -113,6 +117,23 @@ public class AppointmentController : ControllerBase
         }
     }
 
+    [HttpPut("{id:guid]/complete")]
+    [Authorize(Roles = "Doctor")]
+    public async Task<IActionResult> Complete (Guid id)
+    {
+        try
+        {
+            var response = await _completeAppointmentHandler.Handle(id);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+
+    }
+
+
     // ============================================================
     // Helper — lee el UserId del token JWT
     // ============================================================
@@ -125,5 +146,6 @@ public class AppointmentController : ControllerBase
             throw new Exception("Token inválido");
 
         return Guid.Parse(userIdClaim);
+
     }
 }

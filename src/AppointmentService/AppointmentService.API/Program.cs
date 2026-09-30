@@ -2,6 +2,7 @@ using AppointmentService.Application.Interfaces;
 using AppointmentService.Application.UseCases.CreateAppointment;
 using AppointmentService.Application.UsesCases.GetAppointment;
 using AppointmentService.Application.UsesCases.CancelAppointment;
+using AppointmentService.Application.UsesCases.CompleteAppointmentHandler;
 using AppointmentService.Infrastructure.Data;
 using AppointmentService.Infrastructure.Data.Repositories;
 using AppointmentService.Infrastructure.Services;
@@ -56,6 +57,7 @@ builder.Services.AddScoped<IEventPublisher, RabbitMqEventPublisher>();
 builder.Services.AddScoped<CreateAppointmentHandler>();
 builder.Services.AddScoped<CancelAppointmentHandler>();
 builder.Services.AddScoped<GetAppointmentService>();
+builder.Services.AddScoped<CompleteAppointmentHandler>();
 
 // ============================================================
 // 5. JWT
