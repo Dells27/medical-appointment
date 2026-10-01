@@ -1,5 +1,5 @@
 ﻿using MedicalRecordService.Application.DTOs;
-using MedicalRecordService.Application.UseCases.CreateEmptyRecord;
+using MedicalRecordService.Application.UseCases;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;

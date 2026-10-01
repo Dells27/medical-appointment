@@ -23,8 +23,4 @@
     <ProjectReference Include="..\MedicalRecordService.Infrastructure\MedicalRecordService.Infrastructure.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Controllers\" />
-  </ItemGroup>
-
 </Project>
