@@ -117,7 +117,7 @@ public class AppointmentController : ControllerBase
         }
     }
 
-    [HttpPut("{id:guid]/complete")]
+    [HttpPut("{id:guid}/complete")]
     [Authorize(Roles = "Doctor")]
     public async Task<IActionResult> Complete (Guid id)
     {
