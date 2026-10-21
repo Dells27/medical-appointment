@@ -25,7 +25,8 @@ export default function RegisterForm({ role }: RegisterFormProps) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const title = role === "Doctor" ? "Registro de médico" : "Registro de paciente";
+  const title =
+    role === "Doctor" ? "Registro de médico" : "Registro de paciente";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -40,10 +41,13 @@ export default function RegisterForm({ role }: RegisterFormProps) {
         setCredentials({
           user: { name: data.name, email: data.email, role: data.role },
           token: data.token,
-        })
+          expiresAt: data.expiresAt,
+        }),
       );
 
-      router.push(role === "Doctor" ? "/doctor/dashboard" : "/patient/dashboard");
+      router.push(
+        role === "Doctor" ? "/doctor/dashboard" : "/patient/dashboard",
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al registrarse");
     } finally {
@@ -61,15 +65,34 @@ export default function RegisterForm({ role }: RegisterFormProps) {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Nombre completo</Label>
-              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required minLength={2} />
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                minLength={2}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Contraseña</Label>
-              <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} />
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={8}
+              />
             </div>
 
             {error && <p className="text-sm text-red-500">{error}</p>}
