@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
 
 export default function LoginPage() {
   const dispatch = useAppDispatch();
@@ -31,10 +32,12 @@ export default function LoginPage() {
         setCredentials({
           user: { name: data.name, email: data.email, role: data.role },
           token: data.token,
-        })
+        }),
       );
 
-      router.push(data.role === "Doctor" ? "/doctor/dashboard" : "/patient/dashboard");
+      router.push(
+        data.role === "Doctor" ? "/doctor/dashboard" : "/patient/dashboard",
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al iniciar sesión");
     } finally {
@@ -76,6 +79,16 @@ export default function LoginPage() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Entrando..." : "Entrar"}
             </Button>
+            <p className="text-center text-sm">
+              ¿No tenés cuenta?{" "}
+              <Link href="/register/patient" className="underline">
+                Soy paciente
+              </Link>
+              {" · "}
+              <Link href="/register/doctor" className="underline">
+                Soy médico
+              </Link>
+            </p>
           </form>
         </CardContent>
       </Card>
