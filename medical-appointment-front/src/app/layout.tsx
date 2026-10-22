@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import StoreProvider from "@/store/StoreProvider";
+import QueryProvider from "@/components/shared/QueryProvider";
 
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
@@ -26,7 +27,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es">
       <body>
-        <StoreProvider>{children}</StoreProvider>
+        <StoreProvider>
+          <QueryProvider>{children}</QueryProvider></StoreProvider>
       </body>
     </html>
   );
