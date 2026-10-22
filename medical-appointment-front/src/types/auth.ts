@@ -11,3 +11,9 @@ export interface AuthUser{
     email: string;
     role: "Patient" | "Doctor";
 }
+
+export interface StoredSession {
+  user: AuthUser;
+  token: string;
+  expiresAt: string;
+}
