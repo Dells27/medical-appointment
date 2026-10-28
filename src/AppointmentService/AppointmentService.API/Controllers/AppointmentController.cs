@@ -42,6 +42,7 @@ public class AppointmentController : ControllerBase
         {
             var patientId = GetUserId();
             request.PatientID = patientId;
+            request.appointmentDate = DateTime.SpecifyKind(request.appointmentDate.Date, DateTimeKind.Utc);
             // Leer el email del token
             request.PatientEmail =
                 User.FindFirst(ClaimTypes.Email)?.Value

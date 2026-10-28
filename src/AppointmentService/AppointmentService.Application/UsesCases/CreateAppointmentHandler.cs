@@ -24,6 +24,8 @@ public class CreateAppointmentHandler
     public async Task<AppointmentResponse> Handle(CreateAppointmentRequest request)
     {
         // 1. Verificar disponibilidad — primero en Redis (rápido)
+        var appointmentDate = DateTime.SpecifyKind(request.appointmentDate.Date, DateTimeKind.Utc);
+
         var cacheKey = $"slot:{request.doctorId}:{request.appointmentDate:yyyy-MM-dd}:{request.appointmentTime}";
         var isTakenInCache = await _cacheService.GetAsync<bool?>(cacheKey);
 
