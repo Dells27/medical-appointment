@@ -11,7 +11,8 @@ export default function Navbar() {
   const dispatch = useAppDispatch();
   const router = useRouter();
 
-  const home = user?.role === "Doctor" ? "/doctor/dashboard" : "/patient/dashboard";
+  const home =
+    user?.role === "Doctor" ? "/doctor/dashboard" : "/patient/dashboard";
 
   function handleLogout() {
     dispatch(logout());
@@ -24,6 +25,12 @@ export default function Navbar() {
         <Link href={home} className="font-semibold">
           Medical Appointment
         </Link>
+        {user?.role === "Patient" && (
+          <div className="flex items-center gap-4 text-sm">
+            <Link href="/patient/dashboard">Find a doctor</Link>
+            <Link href="/patient/appointments">My appointments</Link>
+          </div>
+        )}
         <div className="flex items-center gap-3">
           <span className="text-sm text-muted-foreground">{user?.name}</span>
           <Button variant="outline" size="sm" onClick={handleLogout}>
