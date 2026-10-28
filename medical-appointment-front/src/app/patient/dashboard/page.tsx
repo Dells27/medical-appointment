@@ -5,8 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useAppSelector } from "@/store/hooks";
 import { getDoctors } from "@/lib/api/doctors";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import BookingDialog from "@/components/shared/BookingDialog";
 
 export default function PatientDashboard() {
   const token = useAppSelector((state) => state.auth.token);
@@ -47,9 +47,7 @@ export default function PatientDashboard() {
             </CardHeader>
             <CardContent className="space-y-3">
               {doctor.bio && <p className="text-sm">{doctor.bio}</p>}
-              <Button className="w-full" disabled>
-                Book appointment
-              </Button>
+              <BookingDialog doctor={doctor} />
             </CardContent>
           </Card>
         ))}

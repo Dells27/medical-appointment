@@ -18,3 +18,22 @@ export async function apiGet<T>(path: string, token: string): Promise<T> {
 
   return res.json();
 }
+
+
+export async function apiPost<T>(path: string, token: string, body: unknown): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new ApiError(data?.message ?? "Request failed", res.status);
+  }
+
+  return res.json();
+}
