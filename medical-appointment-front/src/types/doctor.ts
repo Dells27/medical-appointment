@@ -16,3 +16,11 @@ export interface Doctor {
   bio?: string | null;
   schedules: Schedule[];
 }
+
+export interface CreateDoctorInput {
+  fullName: string;
+  email: string;
+  specialty: string;
+  licenseNumber: string;
+}
+

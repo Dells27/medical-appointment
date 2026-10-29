@@ -12,3 +12,10 @@ export function getMyAppointments(token: string) {
 export function cancelAppointment(token: string, id: string, reason: string) {
   return apiPut<Appointment>(`/api/appointments/${id}/cancel`, token, { reason });
 }
+export function getMySchedule(token: string) {
+  return apiGet<Appointment[]>("/api/appointments/my-schedule", token);
+}
+
+export function completeAppointment(token: string, id: string) {
+  return apiPut<Appointment>(`/api/appointments/${id}/complete`, token, {});
+}

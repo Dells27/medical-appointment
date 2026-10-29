@@ -8,20 +8,17 @@ import { getDoctors } from "@/lib/api/doctors";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-
-const STATUS_VARIANT = {
-  Scheduled: "default",
-  Confirmed: "default",
-  Completed: "secondary",
-  Cancelled: "destructive",
-  NoShow: "outline",
-} as const;
+import { statusVariant } from "@/lib/appointment-status";
 
 export default function MyAppointmentsPage() {
   const token = useAppSelector((state) => state.auth.token);
   const queryClient = useQueryClient();
 
-  const { data: appointments, isLoading, error } = useQuery({
+  const {
+    data: appointments,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["appointments"],
     queryFn: () => getMyAppointments(token!),
     enabled: !!token,
@@ -35,7 +32,8 @@ export default function MyAppointmentsPage() {
   });
 
   const cancel = useMutation({
-    mutationFn: (id: string) => cancelAppointment(token!, id, "Cancelled by patient"),
+    mutationFn: (id: string) =>
+      cancelAppointment(token!, id, "Cancelled by patient"),
     onSuccess: () => {
       toast.success("Appointment cancelled");
       queryClient.invalidateQueries({ queryKey: ["appointments"] });
@@ -45,7 +43,7 @@ export default function MyAppointmentsPage() {
 
   // La cita guarda el UserId del médico; lo buscamos en la lista para mostrar su nombre
   function doctorName(userId: string) {
-    return doctors?.find((d) => d.userId === userId)?.fullName ?? "Doctor";
+    return doctors?.find((d) => d.userId === userId)?.name ?? "Doctor";
   }
 
   return (
@@ -59,20 +57,25 @@ export default function MyAppointmentsPage() {
       <div className="space-y-3">
         {appointments?.map((appointment) => {
           const canCancel =
-            appointment.status === "Scheduled" || appointment.status === "Confirmed";
-          const variant =
-            STATUS_VARIANT[appointment.status as keyof typeof STATUS_VARIANT] ?? "outline";
+            appointment.status === "Scheduled" ||
+            appointment.status === "Confirmed";
+            const variant = statusVariant(appointment.status);
+
 
           return (
             <Card key={appointment.id}>
               <CardContent className="flex items-center justify-between gap-4 pt-6">
                 <div className="space-y-1">
-                  <p className="font-medium">{doctorName(appointment.doctorId)}</p>
+                  <p className="font-medium">
+                    {doctorName(appointment.doctorId)}
+                  </p>
                   <p className="text-sm text-muted-foreground">
                     {appointment.appointmentDate.slice(0, 10)} at{" "}
                     {appointment.appointmentTime.slice(0, 5)}
                   </p>
-                  {appointment.reason && <p className="text-sm">{appointment.reason}</p>}
+                  {appointment.reason && (
+                    <p className="text-sm">{appointment.reason}</p>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-3">

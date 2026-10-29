@@ -77,4 +77,31 @@ public class MedicalRecordController : ControllerBase
         var records = await _getMedicalRecordsHandler.HandleByPatient(patientId);
         return Ok(records);
     }
+
+    // GET /api/medical-records/by-appointment/{appointmentId}
+    [HttpGet("by-appointment/{appointmentId:guid}")]
+    [Authorize(Roles = "Doctor")]
+    public async Task<IActionResult> GetByAppointment(Guid appointmentId)
+    {
+        var userIdClaim = User.FindFirst("sub")?.Value
+                       ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userIdClaim is null)
+            return Unauthorized(new { message = "Token inválido" });
+
+        try
+        {
+            var record = await _getMedicalRecordsHandler.HandleByAppointment(
+                appointmentId, Guid.Parse(userIdClaim));
+            return Ok(record);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+    }
 }

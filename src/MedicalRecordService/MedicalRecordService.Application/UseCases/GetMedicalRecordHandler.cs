@@ -27,4 +27,19 @@ public class GetMedicalRecordsHandler
 
         return FillNotesHandler.MapToResponse(record);
     }
+
+    public async Task<MedicalRecordResponse> HandleByAppointment(Guid appointmentId, Guid doctorId)
+    {
+        var record = await _repository.GetByAppointmentIdAsync(appointmentId);
+        if (record is null)
+            throw new KeyNotFoundException("Medical record not found");
+
+        // El registro solo lo puede ver el médico que atendió la cita
+        if (record.doctorId != doctorId)
+            throw new UnauthorizedAccessException("You cannot access this record");
+
+        return FillNotesHandler.MapToResponse(record);
+    }
 }
+
+
