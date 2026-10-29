@@ -34,6 +34,7 @@ export default function Navbar() {
         )}
         <div className="flex items-center gap-3">
           <span className="text-sm text-muted-foreground">{user?.name}</span>
+          <Link href="/patient/profile">My profile</Link>
           <Button variant="outline" size="sm" onClick={handleLogout}>
             Sign out
           </Button>

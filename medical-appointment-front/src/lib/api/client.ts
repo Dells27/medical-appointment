@@ -55,3 +55,19 @@ export async function apiPut<T>(path: string, token: string, body: unknown): Pro
 
   return res.json();
 }
+
+export async function apiUpload<T>(path: string, token: string, formData: FormData): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, {
+    method: "POST",
+    // Sin Content-Type: el navegador lo completa solo, con el "boundary" del archivo
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new ApiError(data?.message ?? "Request failed", res.status);
+  }
+
+  return res.json();
+}

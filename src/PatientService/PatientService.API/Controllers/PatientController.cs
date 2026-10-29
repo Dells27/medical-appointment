@@ -35,6 +35,8 @@ namespace PatientService.API.Controllers
             try
             {
                 var userIdClaim = User.FindFirst("sub")?.Value ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                request.userId = Guid.Parse(userIdClaim);
+                request.dateOfBirth = DateTime.SpecifyKind(request.dateOfBirth.Date, DateTimeKind.Utc);
                 if (userIdClaim is null)
                     return Unauthorized(new { message = "Token invalido" });
 
