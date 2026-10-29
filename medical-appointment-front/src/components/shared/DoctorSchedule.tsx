@@ -8,6 +8,7 @@ import { statusVariant } from "@/lib/appointment-status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import NotesDialog from "@/components/shared/NotesDialog";
 
 export default function DoctorSchedule() {
   const token = useAppSelector((state) => state.auth.token);
@@ -64,6 +65,7 @@ export default function DoctorSchedule() {
                       onClick={() => complete.mutate(appointment.id)}
                     >
                       Mark as completed
+                      {appointment.status === "Completed" && <NotesDialog appointment={appointment} />}
                     </Button>
                   )}
                 </div>

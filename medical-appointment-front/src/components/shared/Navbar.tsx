@@ -29,6 +29,7 @@ export default function Navbar() {
           <div className="flex items-center gap-4 text-sm">
             <Link href="/patient/dashboard">Find a doctor</Link>
             <Link href="/patient/appointments">My appointments</Link>
+            <Link href="/patient/history">Medical history</Link>
           </div>
         )}
         <div className="flex items-center gap-3">
