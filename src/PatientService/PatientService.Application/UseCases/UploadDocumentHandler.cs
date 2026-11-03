@@ -53,8 +53,8 @@ public class UploadDocumentHandler
             fileType = document.fileType,
             documentType = document.documentType,
             fileSize = document.fileSize,
-            upLoadedAt = document.uploadedAt,
-            downLoadUrl = downloadUrl
+            UploadedAt = document.uploadedAt,
+            DownloadUrl = downloadUrl
         };
     }
 

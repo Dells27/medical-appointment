@@ -75,7 +75,7 @@ namespace PatientService.Application.UseCases
                     fileSize = d.fileSize,
                     fileType = d.fileType,
                     documentType = d.documentType,
-                    upLoadedAt= d.uploadedAt
+                    UploadedAt= d.uploadedAt
 
                 }).ToList()
             };
@@ -100,8 +100,8 @@ namespace PatientService.Application.UseCases
                     fileType = doc.fileType,
                     documentType = doc.documentType,
                     fileSize = doc.fileSize,
-                    upLoadedAt = doc.uploadedAt,
-                    downLoadUrl = downloadUrl
+                    UploadedAt = doc.uploadedAt,
+                    DownloadUrl = downloadUrl
                 });
 
             }

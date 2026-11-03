@@ -54,7 +54,7 @@ namespace PatientService.Application.DTOs
         public string fileType { get; set; } = string.Empty;
         public string documentType { get; set; } = string.Empty;
         public long fileSize { get; set; }
-        public DateTime upLoadedAt { get; set; }
-        public string? downLoadUrl { get; set; } // URL pre-firmada de S3
+        public DateTime UploadedAt { get; set; }
+        public string? DownloadUrl { get; set; }
     }
 }
