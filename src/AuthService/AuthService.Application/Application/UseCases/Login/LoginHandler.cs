@@ -1,4 +1,4 @@
-﻿using AuthService.Application.DTOs;
+using AuthService.Application.DTOs;
 using AuthService.Application.Interfaces;
 using AuthService.Domain.Entities;
 using BCrypt.Net;
@@ -23,20 +23,21 @@ namespace AuthService.Application.UseCases.Login
             var user = await _userRepository.GetByEmailAsync(request.Email);
             if (user == null)
             {
-                throw new Exception("Invalid Credentials");
+                throw new UnauthorizedAccessException("Invalid email or password");
 
             }
 
             var isValidPassword = BCrypt.Net.BCrypt.Verify(request.Password, user.Password);
             if (!isValidPassword)
             {
-                throw new Exception("Invalid Credentials");
+                throw new UnauthorizedAccessException("Invalid email or password");
             }
 
 
             return new AuthResponse
             {
                 Token = _jwtService.GenerateToken(user),
+                UserId = user.ID,
                 Name = user.Name,
                 Email = user.Email,
                 Role = user.Role,

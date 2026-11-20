@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useAppSelector } from "@/store/hooks";
+import { CalendarPlus } from "lucide-react";
 import { createAppointment } from "@/lib/api/appointments";
-import type { Doctor } from "@/types/doctor";
+import type { PublicDoctor } from "@/types/doctor";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -17,16 +17,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import SlotPicker from "./SlotPicker";
 
-// Horarios de 09:00 a 16:30, cada 30 minutos
-const TIME_SLOTS = Array.from({ length: 16 }, (_, i) => {
-  const hour = 9 + Math.floor(i / 2);
-  const minutes = i % 2 === 0 ? "00" : "30";
-  return `${String(hour).padStart(2, "0")}:${minutes}`;
-});
-
-export default function BookingDialog({ doctor }: { doctor: Doctor }) {
-  const token = useAppSelector((state) => state.auth.token);
+export default function BookingDialog({ doctor }: { doctor: PublicDoctor }) {
   const queryClient = useQueryClient();
 
   const [open, setOpen] = useState(false);
@@ -34,33 +27,44 @@ export default function BookingDialog({ doctor }: { doctor: Doctor }) {
   const [time, setTime] = useState("");
   const [reason, setReason] = useState("");
 
-  const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD en hora local
+  function reset() {
+    setDate("");
+    setTime("");
+    setReason("");
+  }
 
   const mutation = useMutation({
     mutationFn: () =>
-      createAppointment(token!, {
-        doctorId: doctor.userId, // el UserId del médico, no su Id
+      createAppointment({
+        doctorId: doctor.userId, // appointments store the doctor's user id
         appointmentDate: date,
-        appointmentTime: `${time}:00`,
-        reason: reason || undefined,
+        appointmentTime: time,
+        reason: reason.trim() || undefined,
       }),
     onSuccess: () => {
-      toast.success("Appointment booked");
+      toast.success("Appointment booked. Your doctor will confirm it soon.");
       queryClient.invalidateQueries({ queryKey: ["appointments"] });
       setOpen(false);
-      setDate("");
-      setTime("");
-      setReason("");
+      reset();
     },
+    // The slot may have been taken meanwhile: refresh the list
+    onError: () => queryClient.invalidateQueries({ queryKey: ["available-slots", doctor.userId] }),
   });
 
   return (
     <>
       <Button className="w-full" onClick={() => setOpen(true)}>
+        <CalendarPlus />
         Book appointment
       </Button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog
+        open={open}
+        onOpenChange={(next) => {
+          setOpen(next);
+          if (!next) mutation.reset();
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Book with {doctor.name}</DialogTitle>
@@ -68,54 +72,31 @@ export default function BookingDialog({ doctor }: { doctor: Doctor }) {
           </DialogHeader>
 
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="date">Date</Label>
-              <Input
-                id="date"
-                type="date"
-                min={today}
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Time</Label>
-              <div className="grid grid-cols-4 gap-2">
-                {TIME_SLOTS.map((slot) => (
-                  <Button
-                    key={slot}
-                    type="button"
-                    size="sm"
-                    variant={time === slot ? "default" : "outline"}
-                    onClick={() => setTime(slot)}
-                  >
-                    {slot}
-                  </Button>
-                ))}
-              </div>
-            </div>
+            <SlotPicker
+              doctorId={doctor.userId}
+              date={date}
+              time={time}
+              onDateChange={setDate}
+              onTimeChange={setTime}
+            />
 
             <div className="space-y-2">
               <Label htmlFor="reason">Reason for visit (optional)</Label>
-              <Input
+              <Textarea
                 id="reason"
+                rows={2}
+                maxLength={500}
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
               />
             </div>
 
-            {mutation.error && (
-              <p className="text-sm text-red-500">{mutation.error.message}</p>
-            )}
+            {mutation.error && <p className="text-sm text-red-500">{mutation.error.message}</p>}
           </div>
 
           <DialogFooter>
-            <Button
-              onClick={() => mutation.mutate()}
-              disabled={!date || !time || mutation.isPending}
-            >
-              {mutation.isPending ? "Booking..." : "Confirm"}
+            <Button onClick={() => mutation.mutate()} disabled={!date || !time || mutation.isPending}>
+              {mutation.isPending ? "Booking..." : "Confirm booking"}
             </Button>
           </DialogFooter>
         </DialogContent>

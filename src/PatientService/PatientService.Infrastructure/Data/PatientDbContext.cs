@@ -60,6 +60,12 @@ namespace PatientService.Infrastructure.Data
                 entity.Property(d => d.fileType).HasColumnName("file_type").IsRequired();
                 entity.Property(d => d.fileSize).HasColumnName("file_size");
                 entity.Property(d => d.documentType).HasColumnName("document_type").IsRequired();
+                entity.Property(d => d.uploadedByRole).HasColumnName("uploaded_by_role").HasMaxLength(20)
+                      .IsRequired().HasDefaultValue("Patient");
+                entity.Property(d => d.uploadedByUserId).HasColumnName("uploaded_by_user_id");
+                entity.Property(d => d.uploadedByName).HasColumnName("uploaded_by_name").HasMaxLength(255);
+                entity.Property(d => d.appointmentId).HasColumnName("appointment_id");
+                entity.Property(d => d.description).HasColumnName("description").HasMaxLength(500);
                 entity.Property(d => d.uploadedAt).HasColumnName("uploaded_at");
             });
         }

@@ -1,6 +1,5 @@
 ﻿using MedicalRecordService.Application.Interfaces;
 using MedicalRecordService.Domain.Entities;
-using MedicalRecordService.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace MedicalRecordService.Infrastructure.Data;
@@ -32,9 +31,27 @@ public class MedicalRecordRepository : IMedicalRecordRepository
             .ToListAsync();
     }
 
+    public async Task<List<MedicalRecord>> GetByDoctorIdAsync(Guid doctorId)
+    {
+        return await _context.MedicalRecords
+            .Where(m => m.doctorId == doctorId)
+            .OrderByDescending(m => m.appointmentDate)
+            .ToListAsync();
+    }
+
     public async Task AddAsync(MedicalRecord record)
     {
         await _context.MedicalRecords.AddAsync(record);
+    }
+
+    public async Task<MedicalBackground?> GetBackgroundAsync(Guid patientId)
+    {
+        return await _context.MedicalBackgrounds.FirstOrDefaultAsync(b => b.patientId == patientId);
+    }
+
+    public async Task AddBackgroundAsync(MedicalBackground background)
+    {
+        await _context.MedicalBackgrounds.AddAsync(background);
     }
 
     public async Task SaveChangesAsync()

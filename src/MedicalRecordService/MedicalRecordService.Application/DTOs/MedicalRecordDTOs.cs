@@ -23,7 +23,32 @@ public class AppointmentCompletedEvent
         public string? observations { get; set; }
     }
 
-    // Response del registro clínico
+    public class UpdateMedicalBackgroundRequest
+    {
+        public string? chronicConditions { get; set; }
+        public string? surgeries { get; set; }
+        public string? currentMedications { get; set; }
+        public string? familyHistory { get; set; }
+        public string? allergies { get; set; }
+        public string? habits { get; set; }
+        public string? notes { get; set; }
+    }
+
+    public class MedicalBackgroundResponse
+    {
+        public Guid patientId { get; set; }
+        public string? chronicConditions { get; set; }
+        public string? surgeries { get; set; }
+        public string? currentMedications { get; set; }
+        public string? familyHistory { get; set; }
+        public string? allergies { get; set; }
+        public string? habits { get; set; }
+        public string? notes { get; set; }
+        public Guid? updatedByDoctorId { get; set; }
+        public DateTime? updatedAt { get; set; } // null when nothing has been recorded yet
+    }
+
+    // Clinical record of one consultation
     public class MedicalRecordResponse
     {
         public Guid Id { get; set; }

@@ -22,6 +22,65 @@ namespace MedicalRecordService.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("MedicalRecordService.Domain.Entities.MedicalBackground", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("allergies")
+                        .HasColumnType("text")
+                        .HasColumnName("allergies");
+
+                    b.Property<string>("chronicConditions")
+                        .HasColumnType("text")
+                        .HasColumnName("chronic_conditions");
+
+                    b.Property<DateTime>("createdAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("currentMedications")
+                        .HasColumnType("text")
+                        .HasColumnName("current_medications");
+
+                    b.Property<string>("familyHistory")
+                        .HasColumnType("text")
+                        .HasColumnName("family_history");
+
+                    b.Property<string>("habits")
+                        .HasColumnType("text")
+                        .HasColumnName("habits");
+
+                    b.Property<string>("notes")
+                        .HasColumnType("text")
+                        .HasColumnName("notes");
+
+                    b.Property<Guid>("patientId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("patient_id");
+
+                    b.Property<string>("surgeries")
+                        .HasColumnType("text")
+                        .HasColumnName("surgeries");
+
+                    b.Property<DateTime>("updatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid>("updatedByDoctorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by_doctor_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("patientId")
+                        .IsUnique();
+
+                    b.ToTable("medical_backgrounds", (string)null);
+                });
+
             modelBuilder.Entity("MedicalRecordService.Domain.Entities.MedicalRecord", b =>
                 {
                     b.Property<Guid>("Id")
@@ -73,6 +132,8 @@ namespace MedicalRecordService.Infrastructure.Migrations
 
                     b.HasIndex("appointmentId")
                         .IsUnique();
+
+                    b.HasIndex("patientId");
 
                     b.ToTable("medical_records", (string)null);
                 });

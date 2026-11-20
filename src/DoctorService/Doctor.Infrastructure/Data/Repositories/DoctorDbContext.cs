@@ -9,6 +9,7 @@ namespace DoctorService.Infrastructure.Data.Repositories
 
         public DbSet<Doctor> Doctors => Set<Doctor>();
         public DbSet<AvailabilitySchedule> Schedules => Set<AvailabilitySchedule>();
+        public DbSet<TimeOff> TimeOffs => Set<TimeOff>();
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -31,15 +32,25 @@ namespace DoctorService.Infrastructure.Data.Repositories
                 entity.Property(d => d.IsActive).HasColumnName("is_active");
                 entity.Property(d => d.CreatedAt).HasColumnName("created_at");
 
-                // Un médico no puede registrarse dos veces
+                // A user can only have one doctor profile
                 entity.HasIndex(d => d.UserId).IsUnique();
                 entity.HasIndex(d => d.Email).IsUnique();
 
-                // Relación Doctor → Schedules
                 entity.HasMany(d => d.Schedules)
                       .WithOne()
                       .HasForeignKey(s => s.DoctorId)
                       .OnDelete(DeleteBehavior.Cascade);
+                entity.Navigation(d => d.Schedules)
+                      .HasField("_schedules")
+                      .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+                entity.HasMany(d => d.TimeOffs)
+                      .WithOne()
+                      .HasForeignKey(t => t.DoctorId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                entity.Navigation(d => d.TimeOffs)
+                      .HasField("_timeOffs")
+                      .UsePropertyAccessMode(PropertyAccessMode.Field);
             });
 
 
@@ -55,6 +66,25 @@ namespace DoctorService.Infrastructure.Data.Repositories
                 entity.Property(s => s.StartTime).HasColumnName("start_time");
                 entity.Property(s => s.EndTime).HasColumnName("end_time");
                 entity.Property(s => s.IsActive).HasColumnName("is_active");
+            });
+
+            modelBuilder.Entity<TimeOff>(entity =>
+            {
+                entity.ToTable("time_offs");
+
+                entity.HasKey(t => t.Id);
+
+                entity.Property(t => t.Id).HasColumnName("id");
+                entity.Property(t => t.DoctorId).HasColumnName("doctor_id");
+                entity.Property(t => t.Type).HasColumnName("type").HasConversion<string>().HasMaxLength(20);
+                entity.Property(t => t.StartDate).HasColumnName("start_date");
+                entity.Property(t => t.EndDate).HasColumnName("end_date");
+                entity.Property(t => t.StartTime).HasColumnName("start_time");
+                entity.Property(t => t.EndTime).HasColumnName("end_time");
+                entity.Property(t => t.Reason).HasColumnName("reason").HasMaxLength(500);
+                entity.Property(t => t.CreatedAt).HasColumnName("created_at");
+
+                entity.HasIndex(t => new { t.DoctorId, t.StartDate, t.EndDate });
             });
 
         }

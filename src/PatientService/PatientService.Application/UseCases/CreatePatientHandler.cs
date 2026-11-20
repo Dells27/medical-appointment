@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using PatientService.Application.DTOs;
+﻿using PatientService.Application.DTOs;
 using PatientService.Application.Interfaces;
 using PatientService.Domain.Entities;
 
@@ -17,19 +12,20 @@ namespace PatientService.Application.UseCases
         public CreatePatientHandler (IPatientRepository repository)
         {
             _patientRepository = repository;
-
         }
 
         public async Task<PatientResponse> Handle(CreatePatientRequest request)
         {
             var exists = await _patientRepository.ExistsAsync(request.userId);
             if (exists)
-                throw new Exception("Este usuario ya tiene un perfil de paciente");
+                throw new InvalidOperationException("This user already has a patient profile");
 
+            if (string.IsNullOrWhiteSpace(request.name))
+                throw new ArgumentException("Name is required");
 
             var patient = Patient.Create(
                 request.userId,
-                request.name,
+                request.name.Trim(),
                 request.email,
                 request.dateOfBirth,
                 request.phoneNumber,
@@ -37,24 +33,38 @@ namespace PatientService.Application.UseCases
                 request.allergies
                 );
 
-
             await _patientRepository.AddAsync( patient );
             await _patientRepository.SaveChangesAsync();
 
             return MapToResponse(patient);
-;        }
+        }
 
         public async Task<PatientResponse> GetByUserIdAsync(Guid userId)
         {
-            var patient = await _patientRepository.GetByUserIdAsync(userId);
-            if (patient is null)
-                throw new Exception("Perfil de paciente no encontrado");
-
+            var patient = await GetPatientOrThrow(userId);
             return MapToResponse(patient);
         }
 
+        public async Task<PatientResponse> UpdateAsync(Guid userId, UpdatePatientRequest request)
+        {
+            var patient = await GetPatientOrThrow(userId);
 
-        
+            patient.UpdateProfile(
+                request.name,
+                request.phoneNumber,
+                DateTime.SpecifyKind(request.dateOfBirth.Date, DateTimeKind.Utc),
+                request.bloodType,
+                request.allergies);
+
+            await _patientRepository.SaveChangesAsync();
+            return MapToResponse(patient);
+        }
+
+        private async Task<Patient> GetPatientOrThrow(Guid userId)
+        {
+            return await _patientRepository.GetByUserIdAsync(userId)
+                ?? throw new KeyNotFoundException("Patient profile not found");
+        }
 
 
         public static PatientResponse MapToResponse(Patient patient)
@@ -81,31 +91,15 @@ namespace PatientService.Application.UseCases
             };
         }
 
-        public async Task<List<MedicalDocumentResponse>> GetDocuments(Guid userId, IS3Service s3Service)
+        // A doctor reads the profile of a patient they have appointments with
+        public async Task<PatientResponse> GetForDoctor(Guid patientUserId, IAppointmentServiceClient appointments)
         {
-            var patient = await _patientRepository.GetByUserIdAsync(userId);
-            if (patient is null)
-                throw new Exception("Perfil de paciente no encontrado");
+            if (!await appointments.HasRelationshipAsync(patientUserId))
+                throw new UnauthorizedAccessException("You can only access patients who have appointments with you");
 
-            var documents = new List<MedicalDocumentResponse>();
-
-            foreach (var doc in patient.Document)
-            {
-                var downloadUrl = await s3Service.GeneratePresignedUrlAsync(doc.fileKey);
-
-                documents.Add(new MedicalDocumentResponse
-                {
-                    Id = doc.id,
-                    fileName = doc.fileName,
-                    fileType = doc.fileType,
-                    documentType = doc.documentType,
-                    fileSize = doc.fileSize,
-                    UploadedAt = doc.uploadedAt,
-                    DownloadUrl = downloadUrl
-                });
-
-            }
-            return documents;
+            var response = MapToResponse(await GetPatientOrThrow(patientUserId));
+            response.Documents = new(); // documents have their own endpoint with download links
+            return response;
         }
 
 

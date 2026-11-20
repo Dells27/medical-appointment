@@ -27,6 +27,8 @@ namespace PatientService.Application.DTOs
     {
         public string name { get; set; } = string.Empty;
         public string phoneNumber { get; set; } = string.Empty;
+        public DateTime dateOfBirth { get; set; }
+        public string bloodType { get; set; } = string.Empty;
         public string? allergies { get; set; }
     }
 
@@ -54,7 +56,25 @@ namespace PatientService.Application.DTOs
         public string fileType { get; set; } = string.Empty;
         public string documentType { get; set; } = string.Empty;
         public long fileSize { get; set; }
+        public string uploadedByRole { get; set; } = "Patient";
+        public string? uploadedByName { get; set; }
+        public Guid? appointmentId { get; set; }
+        public string? description { get; set; }
         public DateTime UploadedAt { get; set; }
         public string? DownloadUrl { get; set; }
+    }
+
+    // Who is uploading a document (taken from the JWT)
+    public record DocumentUploader(Guid UserId, string Role, string Name);
+
+    public class UploadDocumentCommand
+    {
+        public Stream FileStream { get; set; } = Stream.Null;
+        public string FileName { get; set; } = string.Empty;
+        public string ContentType { get; set; } = string.Empty;
+        public long FileSize { get; set; }
+        public string DocumentType { get; set; } = string.Empty;
+        public Guid? AppointmentId { get; set; }
+        public string? Description { get; set; }
     }
 }

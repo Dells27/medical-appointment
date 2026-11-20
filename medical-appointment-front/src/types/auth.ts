@@ -1,19 +1,13 @@
-export interface AuthResponse{
-    token: string;
-    name: string;
-    email: string;
-    role: "Patient" | "Doctor";
-    expiresAt: string;
+export type Role = "Patient" | "Doctor";
+
+export interface AuthUser {
+  userId: string;
+  name: string;
+  email: string;
+  role: Role;
 }
 
-export interface AuthUser{
-    name: string;
-    email: string;
-    role: "Patient" | "Doctor";
-}
-
-export interface StoredSession {
-  user: AuthUser;
-  token: string;
-  expiresAt: string;
+// Returned by login, register and /api/auth/me. The JWT itself stays in an httpOnly cookie.
+export interface AuthUserResponse extends AuthUser {
+  expiresAt: string | null;
 }

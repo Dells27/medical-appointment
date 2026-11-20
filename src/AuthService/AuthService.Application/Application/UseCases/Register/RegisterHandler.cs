@@ -1,4 +1,4 @@
-﻿using AuthService.Application.DTOs;
+using AuthService.Application.DTOs;
 using AuthService.Application.Interfaces;
 using AuthService.Domain.Entities;
 using BCrypt.Net;
@@ -24,7 +24,7 @@ namespace AuthService.Application.UseCases.Register
             var exists = await _userRepository.ExistsAsync(request.Email);
             if (exists)
             {
-                throw new Exception("Email already registered");
+                throw new InvalidOperationException("Email already registered");
             }
 
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
@@ -37,6 +37,7 @@ namespace AuthService.Application.UseCases.Register
             return new AuthResponse
             {
                 Token = _jwtService.GenerateToken(user),
+                UserId = user.ID,
                 Name = user.Name,
                 Email = user.Email,
                 Role = user.Role,

@@ -43,6 +43,7 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
+builder.Services.AddHealthChecks();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -50,7 +51,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "Auth Service API",
         Version = "v1",
-        Description = "Servicio de autenticaciÛn del Sistema de Citas MÈdicas"
+        Description = "Servicio de autenticaci√≥n del Sistema de Citas M√©dicas"
     });
 
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -60,7 +61,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "Bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Ingres· el token asÌ: Bearer {tu token}"
+        Description = "Ingres√° el token as√≠: Bearer {tu token}"
     });
 
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -108,5 +109,6 @@ app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 app.Run();

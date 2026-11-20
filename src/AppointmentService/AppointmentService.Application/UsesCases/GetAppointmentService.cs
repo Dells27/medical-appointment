@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AppointmentService.Application.DTOs;
+﻿using AppointmentService.Application.DTOs;
 using AppointmentService.Application.Interfaces;
 using AppointmentService.Application.UseCases.CreateAppointment;
 
@@ -30,12 +25,16 @@ public class GetAppointmentService
         return appointments.Select(CreateAppointmentHandler.MapToResponse).ToList ();
     }
 
-    public async Task<AppointmentResponse> HandleById(Guid id)
+    // Only the patient or the doctor of the appointment can read it
+    public async Task<AppointmentResponse> HandleById(Guid id, Guid userId)
     {
-        var appointments = await _appointmentRepository.GetByIdAsync (id);
-        if (appointments is null)
-            throw new Exception("Cita no encontrada");
-        return CreateAppointmentHandler.MapToResponse(appointments);
+        var appointment = await _appointmentRepository.GetByIdAsync (id)
+            ?? throw new KeyNotFoundException("Appointment not found");
+
+        if (!appointment.BelongsTo(userId))
+            throw new UnauthorizedAccessException("You cannot access this appointment");
+
+        return CreateAppointmentHandler.MapToResponse(appointment);
     }
 
 }

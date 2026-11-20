@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { login } from "@/lib/api/auth";
 import { useAppDispatch } from "@/store/hooks";
-import { setCredentials } from "@/store/slices/authslices";
+import { setUser } from "@/store/slices/authslices";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Link from "next/link";
 
 export default function LoginPage() {
   const dispatch = useAppDispatch();
@@ -26,31 +26,21 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const data = await login(email, password);
-
-      dispatch(
-        setCredentials({
-          user: { name: data.name, email: data.email, role: data.role },
-          token: data.token,
-          expiresAt: data.expiresAt,
-        }),
-      );
-
-      router.push(
-        data.role === "Doctor" ? "/doctor/dashboard" : "/patient/dashboard",
-      );
+      const { userId, name, email: userEmail, role } = await login(email, password);
+      dispatch(setUser({ userId, name, email: userEmail, role }));
+      router.push(role === "Doctor" ? "/doctor/dashboard" : "/patient/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al iniciar sesión");
+      setError(err instanceof Error ? err.message : "Could not sign in");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-4">
+    <div className="flex items-center justify-center px-4 py-16">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Iniciar sesión</CardTitle>
+          <CardTitle>Sign in</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -59,16 +49,18 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -78,21 +70,21 @@ export default function LoginPage() {
             {error && <p className="text-sm text-red-500">{error}</p>}
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Entrando..." : "Entrar"}
+              {loading ? "Signing in..." : "Sign in"}
             </Button>
             <p className="text-center text-sm">
-              ¿No tenés cuenta?{" "}
+              Don&apos;t have an account?{" "}
               <Link href="/register/patient" className="underline">
-                Soy paciente
+                I&apos;m a patient
               </Link>
               {" · "}
               <Link href="/register/doctor" className="underline">
-                Soy médico
+                I&apos;m a doctor
               </Link>
             </p>
           </form>
         </CardContent>
       </Card>
-    </main>
+    </div>
   );
 }

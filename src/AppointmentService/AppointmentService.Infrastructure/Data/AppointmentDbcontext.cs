@@ -21,21 +21,27 @@ public class AppointmentDbContext : DbContext
             entity.Property(a => a.Id).HasColumnName("id");
             entity.Property(a => a.patientId).HasColumnName("patient_id");
             entity.Property(a => a.doctorId).HasColumnName("doctor_id");
+            entity.Property(a => a.patientName).HasColumnName("patient_name").HasMaxLength(255);
+            entity.Property(a => a.patientEmail).HasColumnName("patient_email").HasMaxLength(255);
             entity.Property(a => a.appointmentDate).HasColumnName("appointment_date");
             entity.Property(a => a.appointmentTime).HasColumnName("appointment_time");
             entity.Property(a => a.status)
                   .HasColumnName("status")
-                  .HasConversion<string>(); // Guarda el enum como texto legible
+                  .HasConversion<string>(); // store the enum as readable text
             entity.Property(a => a.reason).HasColumnName("reason");
             entity.Property(a => a.cancellationReason).HasColumnName("cancellation_reason");
+            entity.Property(a => a.cancelledByRole).HasColumnName("cancelled_by_role").HasMaxLength(20);
+            entity.Property(a => a.rescheduledAt).HasColumnName("rescheduled_at");
             entity.Property(a => a.createdAt).HasColumnName("created_at");
             entity.Property(a => a.updatedAt).HasColumnName("updated_at");
 
-            // ⚠️ Constraint único — evita race conditions
-            // Un mismo médico no puede tener 2 citas en el mismo horario
+            // Unique index — prevents race conditions:
+            // a doctor cannot have two active appointments at the same time
             entity.HasIndex(a => new { a.doctorId, a.appointmentDate, a.appointmentTime })
                   .IsUnique()
                   .HasFilter("status != 'Cancelled'");
+
+            entity.HasIndex(a => new { a.doctorId, a.patientId });
         });
     }
 }

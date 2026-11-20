@@ -1,52 +1,59 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useAppSelector } from "@/store/hooks";
+import { Pencil } from "lucide-react";
 import { getPatientProfile } from "@/lib/api/patients";
-import { ApiError } from "@/lib/api/client";
-import PatientProfileForm from "@/components/shared/PatientProfileForm";
-import DocumentsSection from "@/components/shared/DocumentsSection";
+import { formatDate } from "@/lib/format";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import PageHeader from "@/components/shared/PageHeader";
+import PatientProfileForm from "@/components/shared/PatientProfileForm";
+import { LoadingState } from "@/components/shared/QueryState";
 
 export default function PatientProfilePage() {
-  const token = useAppSelector((state) => state.auth.token);
+  const [editing, setEditing] = useState(false);
 
-  const { data: profile, isLoading, error } = useQuery({
-    queryKey: ["patient-profile"],
-    queryFn: () => getPatientProfile(token!),
-    enabled: !!token,
-    retry: false, // un 404 es una respuesta válida: "todavía no hay perfil"
-  });
+  // The layout's profile gate guarantees the profile exists
+  const { data: profile } = useQuery({ queryKey: ["patient-profile"], queryFn: getPatientProfile });
 
-  if (isLoading) return <p>Loading...</p>;
-
-  if (error instanceof ApiError && error.status === 404) {
-    return <PatientProfileForm />;
-  }
-
-  if (error) return <p className="text-red-500">Could not load your profile.</p>;
-  if (!profile) return <p>Loading...</p>;
+  if (!profile) return <LoadingState />;
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-2xl font-semibold">My profile</h1>
+    <>
+      <PageHeader title="My profile" description="Your personal information." />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{profile.fullName}</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-2 text-sm sm:grid-cols-2">
-          <p><span className="font-medium">Email:</span> {profile.email}</p>
-          <p><span className="font-medium">Phone:</span> {profile.phoneNumber}</p>
-          <p><span className="font-medium">Date of birth:</span> {profile.dateOfBirth.slice(0, 10)}</p>
-          <p><span className="font-medium">Blood type:</span> {profile.bloodType}</p>
-          <p className="sm:col-span-2">
-            <span className="font-medium">Allergies:</span> {profile.allergies || "None"}
-          </p>
-        </CardContent>
-      </Card>
+      {editing ? (
+        <PatientProfileForm profile={profile} onDone={() => setEditing(false)} />
+      ) : (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>{profile.name}</CardTitle>
+            <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
+              <Pencil />
+              Edit
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <dl className="grid gap-4 text-sm sm:grid-cols-2">
+              <Field label="Email" value={profile.email} />
+              <Field label="Phone" value={profile.phoneNumber} />
+              <Field label="Date of birth" value={formatDate(profile.dateOfBirth)} />
+              <Field label="Blood type" value={profile.bloodType} />
+              <Field label="Known allergies" value={profile.allergies || "None reported"} wide />
+            </dl>
+          </CardContent>
+        </Card>
+      )}
+    </>
+  );
+}
 
-      <DocumentsSection />
+function Field({ label, value, wide }: { label: string; value: string; wide?: boolean }) {
+  return (
+    <div className={wide ? "sm:col-span-2" : ""}>
+      <dt className="font-medium">{label}</dt>
+      <dd className="text-muted-foreground">{value}</dd>
     </div>
   );
 }

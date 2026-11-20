@@ -44,12 +44,18 @@ namespace PatientService.Domain.Entities
         }
 
 
-        public void UpdateProfile(string Name, string PhoneNumber, string? Allergies)
+        public void UpdateProfile(string Name, string PhoneNumber, DateTime DateOfBirth, string BloodType, string? Allergies)
         {
-            name=Name;
-            phoneNumber=PhoneNumber;
-            allergies=Allergies;
+            if (string.IsNullOrWhiteSpace(Name))
+                throw new ArgumentException("Name is required");
+            if (DateOfBirth.Date > DateTime.UtcNow.Date)
+                throw new ArgumentException("Date of birth cannot be in the future");
 
+            name = Name.Trim();
+            phoneNumber = PhoneNumber.Trim();
+            dateOfBirth = DateOfBirth;
+            bloodType = BloodType;
+            allergies = string.IsNullOrWhiteSpace(Allergies) ? null : Allergies.Trim();
         }
 
         public void AddDocument(MedicalDocument document)

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using MedicalRecordService.Domain.Entities;
+﻿using MedicalRecordService.Domain.Entities;
 
 namespace MedicalRecordService.Application.Interfaces
 {
@@ -12,7 +7,19 @@ namespace MedicalRecordService.Application.Interfaces
         Task<MedicalRecord?> GetByIdAsync(Guid Id);
         Task<MedicalRecord?> GetByAppointmentIdAsync(Guid id);
         Task<List<MedicalRecord>> GetByPatientIdAsync(Guid patientId);
+        Task<List<MedicalRecord>> GetByDoctorIdAsync(Guid doctorId);
         Task AddAsync(MedicalRecord record);
+
+        Task<MedicalBackground?> GetBackgroundAsync(Guid patientId);
+        Task AddBackgroundAsync(MedicalBackground background);
+
         Task SaveChangesAsync();
+    }
+
+    // Asks the Appointment Service whether the current doctor (JWT forwarded)
+    // has a non-cancelled appointment with the patient
+    public interface IAppointmentServiceClient
+    {
+        Task<bool> HasRelationshipAsync(Guid patientUserId, CancellationToken ct = default);
     }
 }

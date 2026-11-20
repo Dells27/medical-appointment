@@ -37,12 +37,24 @@ builder.Services.AddSingleton<IConnection>(sp =>
 });
 
 // ============================================================
-// 3. INYECCI”N DE DEPENDENCIAS
+// 3. INYECCI√ìN DE DEPENDENCIAS
 // ============================================================
 builder.Services.AddScoped<IMedicalRecordRepository, MedicalRecordRepository>();
 builder.Services.AddScoped<CreateEmptyRecordHandler>();
 builder.Services.AddScoped<FillNotesHandler>();
 builder.Services.AddScoped<GetMedicalRecordsHandler>();
+builder.Services.AddScoped<MedicalRecordService.Application.UseCases.PatientClinicalData.PatientClinicalDataHandler>();
+
+// Service-to-service HTTP: the doctor's JWT is forwarded to the Appointment Service
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddTransient<MedicalRecordService.Infrastructure.Services.ForwardAuthorizationHandler>();
+builder.Services.AddHttpClient<IAppointmentServiceClient, MedicalRecordService.Infrastructure.Services.AppointmentServiceClient>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["Services:AppointmentService"]
+        ?? throw new InvalidOperationException("Missing configuration: Services:AppointmentService"));
+    client.Timeout = TimeSpan.FromSeconds(10);
+})
+.AddHttpMessageHandler<MedicalRecordService.Infrastructure.Services.ForwardAuthorizationHandler>();
 
 // ============================================================
 // 4. EL BACKGROUND SERVICE
@@ -50,7 +62,7 @@ builder.Services.AddScoped<GetMedicalRecordsHandler>();
 builder.Services.AddHostedService<AppointmentCompletedWorker>();
 
 // ============================================================
-// 5. JWT ó este servicio SÕ expone endpoints HTTP (para el mÈdico)
+// 5. JWT ‚Äî este servicio S√ç expone endpoints HTTP (para el m√©dico)
 // ============================================================
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
@@ -82,6 +94,9 @@ builder.Services.AddAuthorization();
 // 6. CONTROLLERS Y SWAGGER
 // ============================================================
 builder.Services.AddControllers();
+builder.Services.AddHealthChecks();
+builder.Services.AddExceptionHandler<MedicalRecordService.API.Middleware.ApiExceptionHandler>();
+builder.Services.AddProblemDetails();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -89,7 +104,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "Medical Record Service API",
         Version = "v1",
-        Description = "Servicio de historial clÌnico del Sistema de Citas MÈdicas"
+        Description = "Servicio de historial cl√≠nico del Sistema de Citas M√©dicas"
     });
 
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -99,7 +114,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "Bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Ingres· el token asÌ: Bearer {tu token}"
+        Description = "Ingres√° el token as√≠: Bearer {tu token}"
     });
 
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -134,7 +149,7 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // ============================================================
-// 8. MIGRACIONES AUTOM¡TICAS
+// 8. MIGRACIONES AUTOM√ÅTICAS
 // ============================================================
 using (var scope = app.Services.CreateScope())
 {
@@ -151,10 +166,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseExceptionHandler();
 app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 app.Run();

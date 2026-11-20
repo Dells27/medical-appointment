@@ -19,27 +19,27 @@ public class GetMedicalRecordsHandler
         return records.Select(r => FillNotesHandler.MapToResponse(r)).ToList();
     }
 
-    public async Task<MedicalRecordResponse> HandleById(Guid id)
+    // Only the patient of the record or the doctor who wrote it can read it
+    public async Task<MedicalRecordResponse> HandleById(Guid id, Guid userId)
     {
-        var record = await _repository.GetByIdAsync(id);
-        if (record is null)
-            throw new Exception("Registro clínico no encontrado");
+        var record = await _repository.GetByIdAsync(id)
+            ?? throw new KeyNotFoundException("Medical record not found");
+
+        if (record.patientId != userId && record.doctorId != userId)
+            throw new UnauthorizedAccessException("You cannot access this medical record");
 
         return FillNotesHandler.MapToResponse(record);
     }
 
+    // Only the doctor who attended the appointment can read its record this way
     public async Task<MedicalRecordResponse> HandleByAppointment(Guid appointmentId, Guid doctorId)
     {
-        var record = await _repository.GetByAppointmentIdAsync(appointmentId);
-        if (record is null)
-            throw new KeyNotFoundException("Medical record not found");
+        var record = await _repository.GetByAppointmentIdAsync(appointmentId)
+            ?? throw new KeyNotFoundException("Medical record not found");
 
-        // El registro solo lo puede ver el médico que atendió la cita
         if (record.doctorId != doctorId)
-            throw new UnauthorizedAccessException("You cannot access this record");
+            throw new UnauthorizedAccessException("You cannot access this medical record");
 
         return FillNotesHandler.MapToResponse(record);
     }
 }
-
-

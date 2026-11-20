@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AppointmentService.Domain.Entities;
+﻿using AppointmentService.Domain.Entities;
 
 namespace AppointmentService.Application.Interfaces
 {
@@ -12,10 +7,11 @@ namespace AppointmentService.Application.Interfaces
         Task<Appointment?> GetByIdAsync(Guid id);
         Task<List<Appointment>> GetByPatientIdAsync(Guid patientId);
         Task<List<Appointment>> GetByDoctorIdAsync(Guid doctorId);
+        Task<List<Appointment>> GetByDoctorAndPatientAsync(Guid doctorId, Guid patientId);
         Task<List<Appointment>> GetByDoctorAndDateAsync(Guid doctorId, DateTime date);
-        Task<bool> IsSlotTakenAsync(Guid doctorId, DateTime date, TimeOnly time);
+        Task<bool> IsSlotTakenAsync(Guid doctorId, DateTime date, TimeOnly time, Guid? excludeAppointmentId = null);
+        Task<bool> HasRelationshipAsync(Guid doctorId, Guid patientId);
         Task AddAsync(Appointment appointment);
         Task SaveChangesAsync();
-
     }
 }

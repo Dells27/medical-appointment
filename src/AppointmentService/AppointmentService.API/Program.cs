@@ -3,6 +3,11 @@ using AppointmentService.Application.UseCases.CreateAppointment;
 using AppointmentService.Application.UsesCases.GetAppointment;
 using AppointmentService.Application.UsesCases.CancelAppointment;
 using AppointmentService.Application.UsesCases.CompleteAppointmentHandler;
+using AppointmentService.Application.UsesCases.ConfirmAppointment;
+using AppointmentService.Application.UsesCases.DoctorPatients;
+using AppointmentService.Application.UsesCases.DoctorStats;
+using AppointmentService.Application.UsesCases.RescheduleAppointment;
+using AppointmentService.Application.UsesCases.Scheduling;
 using AppointmentService.Infrastructure.Data;
 using AppointmentService.Infrastructure.Data.Repositories;
 using AppointmentService.Infrastructure.Services;
@@ -44,12 +49,12 @@ builder.Services.AddSingleton<IConnection>(sp =>
         Password = builder.Configuration["RabbitMQ:Password"]!
     };
 
-    // CreateConnectionAsync es async ó lo esperamos de forma sÌncrona solo al arrancar
+    // CreateConnectionAsync es async ‚Äî lo esperamos de forma s√≠ncrona solo al arrancar
     return factory.CreateConnectionAsync().GetAwaiter().GetResult();
 });
 
 // ============================================================
-// 4. INYECCI”N DE DEPENDENCIAS
+// 4. INYECCI√ìN DE DEPENDENCIAS
 // ============================================================
 builder.Services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 builder.Services.AddScoped<ICacheService, RedisCacheService>();
@@ -58,6 +63,24 @@ builder.Services.AddScoped<CreateAppointmentHandler>();
 builder.Services.AddScoped<CancelAppointmentHandler>();
 builder.Services.AddScoped<GetAppointmentService>();
 builder.Services.AddScoped<CompleteAppointmentHandler>();
+builder.Services.AddScoped<ConfirmAppointmentHandler>();
+builder.Services.AddScoped<RescheduleAppointmentHandler>();
+builder.Services.AddScoped<DoctorPatientsHandler>();
+builder.Services.AddScoped<DoctorStatsHandler>();
+builder.Services.AddScoped<SlotAvailabilityService>();
+builder.Services.AddScoped<DoctorLookup>();
+builder.Services.AddSingleton(builder.Configuration.GetSection("Scheduling").Get<SchedulingOptions>() ?? new SchedulingOptions());
+
+// Service-to-service HTTP: the current user's JWT is forwarded to the Doctor Service
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddTransient<ForwardAuthorizationHandler>();
+builder.Services.AddHttpClient<IDoctorServiceClient, DoctorServiceClient>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["Services:DoctorService"]
+        ?? throw new InvalidOperationException("Missing configuration: Services:DoctorService"));
+    client.Timeout = TimeSpan.FromSeconds(10);
+})
+.AddHttpMessageHandler<ForwardAuthorizationHandler>();
 
 // ============================================================
 // 5. JWT
@@ -92,6 +115,9 @@ builder.Services.AddAuthorization();
 // 6. CONTROLLERS Y SWAGGER
 // ============================================================
 builder.Services.AddControllers();
+builder.Services.AddHealthChecks();
+builder.Services.AddExceptionHandler<AppointmentService.API.Middleware.ApiExceptionHandler>();
+builder.Services.AddProblemDetails();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -99,7 +125,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "Appointment Service API",
         Version = "v1",
-        Description = "Servicio de citas del Sistema de Citas MÈdicas"
+        Description = "Servicio de citas del Sistema de Citas M√©dicas"
     });
 
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -109,7 +135,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "Bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Ingres· el token asÌ: Bearer {tu token}"
+        Description = "Ingres√° el token as√≠: Bearer {tu token}"
     });
 
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -144,7 +170,7 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // ============================================================
-// 8. MIGRACIONES AUTOM¡TICAS
+// 8. MIGRACIONES AUTOM√ÅTICAS
 // ============================================================
 using (var scope = app.Services.CreateScope())
 {
@@ -161,10 +187,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseExceptionHandler();
 app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 app.Run();

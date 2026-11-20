@@ -29,6 +29,15 @@ namespace PatientService.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<Guid?>("appointmentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("appointment_id");
+
+                    b.Property<string>("description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("description");
+
                     b.Property<string>("documentType")
                         .IsRequired()
                         .HasColumnType("text")
@@ -60,6 +69,23 @@ namespace PatientService.Infrastructure.Migrations
                     b.Property<DateTime>("uploadedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("uploaded_at");
+
+                    b.Property<string>("uploadedByName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("uploaded_by_name");
+
+                    b.Property<string>("uploadedByRole")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("Patient")
+                        .HasColumnName("uploaded_by_role");
+
+                    b.Property<Guid?>("uploadedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("uploaded_by_user_id");
 
                     b.HasKey("id");
 

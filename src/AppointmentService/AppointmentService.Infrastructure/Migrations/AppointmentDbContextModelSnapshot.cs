@@ -41,6 +41,11 @@ namespace AppointmentService.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("cancellation_reason");
 
+                    b.Property<string>("cancelledByRole")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("cancelled_by_role");
+
                     b.Property<DateTime>("createdAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -49,13 +54,27 @@ namespace AppointmentService.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("doctor_id");
 
+                    b.Property<string>("patientEmail")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("patient_email");
+
                     b.Property<Guid>("patientId")
                         .HasColumnType("uuid")
                         .HasColumnName("patient_id");
 
+                    b.Property<string>("patientName")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("patient_name");
+
                     b.Property<string>("reason")
                         .HasColumnType("text")
                         .HasColumnName("reason");
+
+                    b.Property<DateTime?>("rescheduledAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("rescheduled_at");
 
                     b.Property<string>("status")
                         .IsRequired()
@@ -67,6 +86,8 @@ namespace AppointmentService.Infrastructure.Migrations
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("doctorId", "patientId");
 
                     b.HasIndex("doctorId", "appointmentDate", "appointmentTime")
                         .IsUnique()

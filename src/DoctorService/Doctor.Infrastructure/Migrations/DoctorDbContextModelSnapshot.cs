@@ -118,6 +118,55 @@ namespace DoctorService.Infrastructure.Migrations
                     b.ToTable("doctors", (string)null);
                 });
 
+            modelBuilder.Entity("DoctorService.Domain.Entities.TimeOff", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("DoctorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("doctor_id");
+
+                    b.Property<DateOnly>("EndDate")
+                        .HasColumnType("date")
+                        .HasColumnName("end_date");
+
+                    b.Property<TimeOnly?>("EndTime")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("end_time");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("reason");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date")
+                        .HasColumnName("start_date");
+
+                    b.Property<TimeOnly?>("StartTime")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("start_time");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DoctorId", "StartDate", "EndDate");
+
+                    b.ToTable("time_offs", (string)null);
+                });
+
             modelBuilder.Entity("DoctorService.Domain.Entities.AvailabilitySchedule", b =>
                 {
                     b.HasOne("DoctorService.Domain.Entities.Doctor", null)
@@ -127,9 +176,20 @@ namespace DoctorService.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("DoctorService.Domain.Entities.TimeOff", b =>
+                {
+                    b.HasOne("DoctorService.Domain.Entities.Doctor", null)
+                        .WithMany("TimeOffs")
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("DoctorService.Domain.Entities.Doctor", b =>
                 {
                     b.Navigation("Schedules");
+
+                    b.Navigation("TimeOffs");
                 });
 #pragma warning restore 612, 618
         }

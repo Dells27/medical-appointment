@@ -1,14 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AppointmentService.Application.DTOs;
+﻿using AppointmentService.Application.DTOs;
 using AppointmentService.Application.Interfaces;
 using AppointmentService.Application.UseCases.CreateAppointment;
-
-
-
 
 namespace AppointmentService.Application.UsesCases.CompleteAppointmentHandler
 {
@@ -25,12 +17,14 @@ namespace AppointmentService.Application.UsesCases.CompleteAppointmentHandler
         }
 
 
-        public async Task<AppointmentResponse> Handle (Guid appointmentId)
+        // Only the doctor of the appointment can complete it
+        public async Task<AppointmentResponse> Handle (Guid appointmentId, Guid doctorUserId)
         {
-            var appointment = await _appointmentRepository.GetByIdAsync (appointmentId);
-            if (appointment is null)
-                throw new Exception("Appointment can't be found");
+            var appointment = await _appointmentRepository.GetByIdAsync (appointmentId)
+                ?? throw new KeyNotFoundException("Appointment not found");
 
+            if (!appointment.IsDoctor(doctorUserId))
+                throw new UnauthorizedAccessException("You cannot complete this appointment");
 
             appointment.Complete();
             await _appointmentRepository.SaveChangesAsync ();
@@ -41,7 +35,6 @@ namespace AppointmentService.Application.UsesCases.CompleteAppointmentHandler
                 patientId = appointment.patientId,
                 doctorId = appointment.doctorId,
                 appointmentDate = appointment.appointmentDate
-
             });
 
             return CreateAppointmentHandler.MapToResponse(appointment);

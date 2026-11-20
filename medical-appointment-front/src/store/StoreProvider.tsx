@@ -1,37 +1,29 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { Provider } from "react-redux";
-import { makeStore, AppStore } from "./store";
-import { restoreSession } from "./slices/authslices";
-import { clearSession, loadSession, saveSession } from "@/lib/session";
+import { makeStore } from "./store";
+import { logout, sessionChecked } from "./slices/authslices";
+import { getMe } from "@/lib/api/auth";
+import { setUnauthorizedHandler } from "@/lib/api/client";
 
 export default function StoreProvider({ children }: { children: React.ReactNode }) {
-  const storeRef = useRef<AppStore | null>(null);
-
-  if (!storeRef.current) {
-    storeRef.current = makeStore();
-  }
+  // Lazy initializer: one store per browser session, created on first render
+  const [store] = useState(makeStore);
 
   useEffect(() => {
-    const store = storeRef.current!;
+    // Any protected request that returns 401 ends the session in the UI
+    setUnauthorizedHandler(() => store.dispatch(logout()));
 
-    // 1. Al arrancar: recuperar la sesión guardada
-    store.dispatch(restoreSession(loadSession()));
+    // Restore the session from the httpOnly cookie
+    getMe()
+      .then(({ userId, name, email, role }) =>
+        store.dispatch(sessionChecked({ userId, name, email, role })),
+      )
+      .catch(() => store.dispatch(sessionChecked(null)));
 
-    // 2. Después: cada cambio en auth se refleja en localStorage
-    const unsubscribe = store.subscribe(() => {
-      const { user, token, expiresAt } = store.getState().auth;
+    return () => setUnauthorizedHandler(null);
+  }, [store]);
 
-      if (user && token && expiresAt) {
-        saveSession({ user, token, expiresAt });
-      } else {
-        clearSession();
-      }
-    });
-
-    return unsubscribe;
-  }, []);
-
-  return <Provider store={storeRef.current}>{children}</Provider>;
+  return <Provider store={store}>{children}</Provider>;
 }

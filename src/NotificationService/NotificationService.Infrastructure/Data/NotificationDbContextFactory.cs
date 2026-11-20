@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
 namespace NotificationService.Infrastructure.Data;
@@ -10,7 +10,7 @@ public class NotificationDbContextFactory : IDesignTimeDbContextFactory<Notifica
         var optionsBuilder = new DbContextOptionsBuilder<NotificationDbContext>();
 
         optionsBuilder.UseNpgsql(
-            "Host=localhost;Port=5432;Database=db_notifications;Username=medic_admin;Password=medic_password");
+            Environment.GetEnvironmentVariable("DESIGN_TIME_CONNECTION_STRING") ?? "Host=localhost;Port=5432;Database=db_notifications;Username=medic_admin");
 
         return new NotificationDbContext(optionsBuilder.Options);
     }

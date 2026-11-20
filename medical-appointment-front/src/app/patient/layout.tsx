@@ -1,11 +1,13 @@
 import RoleGuard from "@/components/shared/RoleGuard";
-import Navbar from "@/components/shared/Navbar";
+import AppShell from "@/components/layout/AppShell";
+import { PatientProfileGate } from "@/components/shared/ProfileGate";
 
 export default function PatientLayout({ children }: { children: React.ReactNode }) {
   return (
     <RoleGuard role="Patient">
-      <Navbar />
-      <main className="mx-auto max-w-5xl p-4">{children}</main>
+      <AppShell role="Patient">
+        <PatientProfileGate>{children}</PatientProfileGate>
+      </AppShell>
     </RoleGuard>
   );
 }

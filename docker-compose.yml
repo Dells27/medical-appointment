@@ -1,45 +1,45 @@
-version: "3.9"
+# Credentials come from a local .env file (see .env.example). Never commit .env.
 
 services:
 
-  # PostgreSQL — un solo servidor, vamos a usar un schema por microservicio
+  # PostgreSQL — one server, one database per microservice (see docker/postgres/init.sql)
   postgres:
     image: postgres:16
     container_name: medic-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: medic_admin
-      POSTGRES_PASSWORD: medic_password
-      POSTGRES_DB: medic_appointments
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-medic_appointments}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - medic-network
 
-  # RabbitMQ — incluye panel de administración web en el puerto 15672
+  # RabbitMQ — includes the management UI on port 15672
   rabbitmq:
     image: rabbitmq:3-management
     container_name: medic-rabbitmq
     restart: unless-stopped
     environment:
-      RABBITMQ_DEFAULT_USER: medic_admin
-      RABBITMQ_DEFAULT_PASS: medic_password
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:?Set RABBITMQ_USER in .env}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD in .env}
     ports:
-      - "5672:5672"   # Puerto para que los microservicios se conecten
-      - "15672:15672" # Puerto del panel web de administración
+      - "${RABBITMQ_PORT:-5672}:5672"   # AMQP — microservices connect here
+      - "${RABBITMQ_UI_PORT:-15672}:15672" # Management UI
     networks:
       - medic-network
 
-  # Redis — cache en memoria
+  # Redis — in-memory cache
   redis:
     image: redis:7-alpine
     container_name: medic-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     networks:
       - medic-network
 

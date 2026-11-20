@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
 namespace AppointmentService.Infrastructure.Data;
@@ -12,7 +12,7 @@ public class AppointmentDbContextFactory : IDesignTimeDbContextFactory<Appointme
         var optionsBuilder = new DbContextOptionsBuilder<AppointmentDbContext>();
 
         optionsBuilder.UseNpgsql(
-            "Host=localhost;Port=5432;Database=db_appointments;Username=medic_admin;Password=medic_password");
+            Environment.GetEnvironmentVariable("DESIGN_TIME_CONNECTION_STRING") ?? "Host=localhost;Port=5432;Database=db_appointments;Username=medic_admin");
 
         return new AppointmentDbContext(optionsBuilder.Options);
     }

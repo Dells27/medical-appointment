@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { registerDoctor, registerPatient } from "@/lib/api/auth";
 import { useAppDispatch } from "@/store/hooks";
-import { setCredentials } from "@/store/slices/authslices";
+import { setUser } from "@/store/slices/authslices";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,8 +25,7 @@ export default function RegisterForm({ role }: RegisterFormProps) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const title =
-    role === "Doctor" ? "Registro de médico" : "Registro de paciente";
+  const title = role === "Doctor" ? "Doctor sign up" : "Patient sign up";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,27 +35,17 @@ export default function RegisterForm({ role }: RegisterFormProps) {
     try {
       const register = role === "Doctor" ? registerDoctor : registerPatient;
       const data = await register(name, email, password);
-
-      dispatch(
-        setCredentials({
-          user: { name: data.name, email: data.email, role: data.role },
-          token: data.token,
-          expiresAt: data.expiresAt,
-        }),
-      );
-
-      router.push(
-        role === "Doctor" ? "/doctor/dashboard" : "/patient/dashboard",
-      );
+      dispatch(setUser({ userId: data.userId, name: data.name, email: data.email, role: data.role }));
+      router.push(role === "Doctor" ? "/doctor/dashboard" : "/patient/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al registrarse");
+      setError(err instanceof Error ? err.message : "Could not create your account");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-4">
+    <div className="flex items-center justify-center px-4 py-16">
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>{title}</CardTitle>
@@ -64,9 +53,10 @@ export default function RegisterForm({ role }: RegisterFormProps) {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Nombre completo</Label>
+              <Label htmlFor="name">Full name</Label>
               <Input
                 id="name"
+                autoComplete="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -78,16 +68,18 @@ export default function RegisterForm({ role }: RegisterFormProps) {
               <Input
                 id="email"
                 type="email"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
+                autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -98,18 +90,18 @@ export default function RegisterForm({ role }: RegisterFormProps) {
             {error && <p className="text-sm text-red-500">{error}</p>}
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Creando cuenta..." : "Crear cuenta"}
+              {loading ? "Creating account..." : "Create account"}
             </Button>
 
             <p className="text-center text-sm">
-              ¿Ya tenés cuenta?{" "}
+              Already have an account?{" "}
               <Link href="/login" className="underline">
-                Iniciá sesión
+                Sign in
               </Link>
             </p>
           </form>
         </CardContent>
       </Card>
-    </main>
+    </div>
   );
 }

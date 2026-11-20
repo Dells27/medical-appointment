@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { useAppSelector } from "@/store/hooks";
+import { NotebookPen } from "lucide-react";
 import { fillNotes, getRecordByAppointment } from "@/lib/api/medical-record";
+import { formatDate } from "@/lib/format";
 import type { Appointment } from "@/types/appointment";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -18,8 +19,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+// Clinical notes for a completed appointment. The record is created by the
+// Medical Record Service when it receives the "appointment.completed" event.
 export default function NotesDialog({ appointment }: { appointment: Appointment }) {
-  const token = useAppSelector((state) => state.auth.token);
   const queryClient = useQueryClient();
 
   const [open, setOpen] = useState(false);
@@ -29,40 +31,43 @@ export default function NotesDialog({ appointment }: { appointment: Appointment 
 
   const { data: record, isLoading, error, refetch } = useQuery({
     queryKey: ["record", appointment.id],
-    queryFn: () => getRecordByAppointment(token!, appointment.id),
-    enabled: open && !!token, // solo pedimos el registro al abrir el diálogo
+    queryFn: () => getRecordByAppointment(appointment.id),
+    enabled: open, // only load the record when the dialog opens
     retry: false,
   });
 
   const save = useMutation({
     mutationFn: () =>
-      fillNotes(token!, record!.id, {
-        diagnosis,
-        treatment,
-        observations: observations || undefined,
+      fillNotes(record!.id, {
+        diagnosis: diagnosis.trim(),
+        treatment: treatment.trim(),
+        observations: observations.trim() || undefined,
       }),
     onSuccess: () => {
       toast.success("Clinical notes saved");
       queryClient.invalidateQueries({ queryKey: ["record", appointment.id] });
+      queryClient.invalidateQueries({ queryKey: ["consultations"] });
+      queryClient.invalidateQueries({ queryKey: ["patient-history", appointment.patientId] });
     },
   });
 
   return (
     <>
       <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
+        <NotebookPen />
         Clinical notes
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Clinical notes</DialogTitle>
             <DialogDescription>
-              Visit on {appointment.appointmentDate.slice(0, 10)}
+              {appointment.patientName ?? "Patient"} · visit on {formatDate(appointment.appointmentDate)}
             </DialogDescription>
           </DialogHeader>
 
-          {isLoading && <p>Loading...</p>}
+          {isLoading && <p className="text-sm text-muted-foreground">Loading...</p>}
 
           {error && (
             <div className="space-y-2">
@@ -79,16 +84,16 @@ export default function NotesDialog({ appointment }: { appointment: Appointment 
             <div className="space-y-3 text-sm">
               <div>
                 <p className="font-medium">Diagnosis</p>
-                <p>{record.diagnosis}</p>
+                <p className="whitespace-pre-wrap text-muted-foreground">{record.diagnosis}</p>
               </div>
               <div>
-                <p className="font-medium">Treatment</p>
-                <p>{record.treatment}</p>
+                <p className="font-medium">Treatment & prescription</p>
+                <p className="whitespace-pre-wrap text-muted-foreground">{record.treatment}</p>
               </div>
               {record.observations && (
                 <div>
                   <p className="font-medium">Observations</p>
-                  <p>{record.observations}</p>
+                  <p className="whitespace-pre-wrap text-muted-foreground">{record.observations}</p>
                 </div>
               )}
             </div>
@@ -102,13 +107,22 @@ export default function NotesDialog({ appointment }: { appointment: Appointment 
                   <Textarea id="diagnosis" value={diagnosis} onChange={(e) => setDiagnosis(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="treatment">Treatment</Label>
-                  <Textarea id="treatment" value={treatment} onChange={(e) => setTreatment(e.target.value)} />
+                  <Label htmlFor="treatment">Treatment & prescription</Label>
+                  <Textarea
+                    id="treatment"
+                    placeholder="Medication, dose, frequency and duration"
+                    value={treatment}
+                    onChange={(e) => setTreatment(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="observations">Observations (optional)</Label>
                   <Textarea id="observations" value={observations} onChange={(e) => setObservations(e.target.value)} />
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Notes can&apos;t be edited once saved. To share a prescription file, upload it from the
+                  patient&apos;s documents.
+                </p>
                 {save.error && <p className="text-sm text-red-500">{save.error.message}</p>}
               </div>
 

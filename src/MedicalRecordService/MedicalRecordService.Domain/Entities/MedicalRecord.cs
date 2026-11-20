@@ -43,7 +43,7 @@ namespace MedicalRecordService.Domain.Entities
         public void FillNotes(string Diagnosis, string Treatment, string? Observations)
         {
             if (isCompleted)
-                throw new Exception("Este registro clínico ya fue completado");
+                throw new InvalidOperationException("This medical record has already been completed");
 
             diagnosis = Diagnosis;
             treatment = Treatment;

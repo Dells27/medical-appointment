@@ -19,14 +19,15 @@ builder.Services.AddDbContext<DoctorDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // ============================================================
-// 2. INYECCI”N DE DEPENDENCIAS
+// 2. INYECCI√ìN DE DEPENDENCIAS
 // ============================================================
 builder.Services.AddScoped<IDoctorRepository, DoctorRepository>();
 builder.Services.AddScoped<CreateDoctorHanlder>();
 builder.Services.AddScoped<GetDoctorHandler>();
+builder.Services.AddScoped<DoctorService.Application.UseCases.Profile.DoctorProfileHandler>();
 
 // ============================================================
-// 3. JWT ó ValidaciÛn del token
+// 3. JWT ‚Äî Validaci√≥n del token
 // El Doctor Service NO genera tokens, solo los valida
 // ============================================================
 var jwtSecret = builder.Configuration["Jwt:Secret"]!;
@@ -58,6 +59,9 @@ builder.Services.AddAuthorization();
 // 4. CONTROLLERS Y SWAGGER
 // ============================================================
 builder.Services.AddControllers();
+builder.Services.AddHealthChecks();
+builder.Services.AddExceptionHandler<DoctorService.API.Middleware.ApiExceptionHandler>();
+builder.Services.AddProblemDetails();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -65,7 +69,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "Doctor Service API",
         Version = "v1",
-        Description = "Servicio de mÈdicos del Sistema de Citas MÈdicas"
+        Description = "Servicio de m√©dicos del Sistema de Citas M√©dicas"
     });
 
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -75,7 +79,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "Bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Ingres· el token asÌ: Bearer {tu token}"
+        Description = "Ingres√° el token as√≠: Bearer {tu token}"
     });
 
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -110,7 +114,7 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // ============================================================
-// 6. MIGRACIONES AUTOM¡TICAS
+// 6. MIGRACIONES AUTOM√ÅTICAS
 // ============================================================
 using (var scope = app.Services.CreateScope())
 {
@@ -127,10 +131,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseExceptionHandler();
 app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 app.Run();

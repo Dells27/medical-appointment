@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using NotificationService.Application.Interfaces;
-using NotificationService.Application.UsesCases.HandleAppointmentCreated;
+using NotificationService.Application.UsesCases;
 using NotificationService.Infrastructure.Data;
 using NotificationService.Infrastructure.Data.Repositories;
 using NotificationService.Infrastructure.Services;
@@ -32,14 +32,14 @@ builder.Services.AddSingleton<IConnection>(sp =>
 });
 
 // ============================================================
-// 3. INYECCI”N DE DEPENDENCIAS
+// 3. INYECCI√ìN DE DEPENDENCIAS
 // ============================================================
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
-builder.Services.AddScoped<HandleAppointmentCreatedHandler>();
+builder.Services.AddScoped<AppointmentNotificationsHandler>();
 
 // ============================================================
-// 4. EL BACKGROUND SERVICE ó lo m·s importante de este servicio
+// 4. EL BACKGROUND SERVICE ‚Äî lo m√°s importante de este servicio
 // ============================================================
 builder.Services.AddHostedService<AppointmentEventsWorker>();
 
@@ -49,6 +49,7 @@ builder.Services.AddHostedService<AppointmentEventsWorker>();
 // como "ver historial de notificaciones enviadas"
 // ============================================================
 builder.Services.AddControllers();
+builder.Services.AddHealthChecks();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -56,14 +57,14 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "Notification Service API",
         Version = "v1",
-        Description = "Servicio de notificaciones del Sistema de Citas MÈdicas"
+        Description = "Servicio de notificaciones del Sistema de Citas M√©dicas"
     });
 });
 
 var app = builder.Build();
 
 // ============================================================
-// 6. MIGRACIONES AUTOM¡TICAS
+// 6. MIGRACIONES AUTOM√ÅTICAS
 // ============================================================
 using (var scope = app.Services.CreateScope())
 {
@@ -82,5 +83,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.MapControllers();
+app.MapHealthChecks("/health");
 
 app.Run();

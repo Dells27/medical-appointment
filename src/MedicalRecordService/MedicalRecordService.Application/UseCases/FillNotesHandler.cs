@@ -12,11 +12,14 @@ public class FillNotesHandler
         _repository = repository;
     }
 
-    public async Task<MedicalRecordResponse> Handle(Guid recordId, FillNotesRequest request)
+    // Only the doctor who attended the appointment can write its clinical notes
+    public async Task<MedicalRecordResponse> Handle(Guid recordId, FillNotesRequest request, Guid doctorUserId)
     {
-        var record = await _repository.GetByIdAsync(recordId);
-        if (record is null)
-            throw new Exception("Registro clínico no encontrado");
+        var record = await _repository.GetByIdAsync(recordId)
+            ?? throw new KeyNotFoundException("Medical record not found");
+
+        if (record.doctorId != doctorUserId)
+            throw new UnauthorizedAccessException("You cannot edit this medical record");
 
         record.FillNotes(request.diagnosis, request.Treatment, request.observations);
         await _repository.SaveChangesAsync();

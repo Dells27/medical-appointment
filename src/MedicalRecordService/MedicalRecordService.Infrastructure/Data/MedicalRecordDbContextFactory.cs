@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
 namespace MedicalRecordService.Infrastructure.Data;
@@ -10,7 +10,7 @@ public class MedicalRecordDbContextFactory : IDesignTimeDbContextFactory<Medical
         var optionsBuilder = new DbContextOptionsBuilder<MedicalRecordDbContext>();
 
         optionsBuilder.UseNpgsql(
-            "Host=127.0.0.1;Port=5432;Database=db_medical_records;Username=medic_admin;Password=medic_password");
+            Environment.GetEnvironmentVariable("DESIGN_TIME_CONNECTION_STRING") ?? "Host=127.0.0.1;Port=5432;Database=db_medical_records;Username=medic_admin");
 
         return new MedicalRecordDbContext(optionsBuilder.Options);
     }

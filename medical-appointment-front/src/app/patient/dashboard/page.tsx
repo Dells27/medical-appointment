@@ -1,57 +1,89 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
+import { CalendarCheck, CalendarX, FileText, History, Search } from "lucide-react";
 import { useAppSelector } from "@/store/hooks";
-import { getDoctors } from "@/lib/api/doctors";
-import { Input } from "@/components/ui/input";
+import { getMyAppointments } from "@/lib/api/appointments";
+import { useDoctorDirectory } from "@/hooks/use-doctor-directory";
+import { isActiveStatus } from "@/lib/appointment-status";
+import { dateKey, todayKey } from "@/lib/format";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import BookingDialog from "@/components/shared/BookingDialog";
+import PageHeader from "@/components/shared/PageHeader";
+import PatientAppointmentCard from "@/components/shared/PatientAppointmentCard";
+import { EmptyState, ErrorState, LoadingState } from "@/components/shared/QueryState";
+
+const QUICK_LINKS = [
+  { href: "/patient/doctors", label: "Find a doctor", icon: Search },
+  { href: "/patient/appointments", label: "My appointments", icon: CalendarCheck },
+  { href: "/patient/history", label: "Medical history", icon: History },
+  { href: "/patient/documents", label: "Medical documents", icon: FileText },
+];
 
 export default function PatientDashboard() {
-  const token = useAppSelector((state) => state.auth.token);
-  const [search, setSearch] = useState("");
+  const user = useAppSelector((state) => state.auth.user);
+  const findDoctor = useDoctorDirectory();
 
-  const { data: doctors, isLoading, error } = useQuery({
-    queryKey: ["doctors"],
-    queryFn: () => getDoctors(token!),
-    enabled: !!token,
+  const { data: appointments, isLoading, error } = useQuery({
+    queryKey: ["appointments"],
+    queryFn: getMyAppointments,
   });
 
-  const filtered = doctors?.filter((d) =>
-    `${d.name} ${d.specialty}`.toLowerCase().includes(search.toLowerCase())
-  );
+  const today = todayKey();
+  const upcoming = (appointments ?? [])
+    .filter((a) => isActiveStatus(a.status) && dateKey(a.appointmentDate) >= today)
+    .sort((a, b) =>
+      (dateKey(a.appointmentDate) + a.appointmentTime).localeCompare(dateKey(b.appointmentDate) + b.appointmentTime),
+    );
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-semibold">Find a doctor</h1>
-        <Input
-          placeholder="Search by name or specialty"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-md"
-        />
-      </div>
+    <>
+      <PageHeader
+        title={`Hello, ${user?.name?.split(" ")[0] ?? ""}`}
+        description="Here is what's coming up for you."
+      />
 
-      {isLoading && <p>Loading doctors...</p>}
-      {error && <p className="text-red-500">Could not load doctors.</p>}
-      {filtered?.length === 0 && <p>No doctors found.</p>}
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filtered?.map((doctor) => (
-          <Card key={doctor.id}>
-            <CardHeader>
-              <CardTitle>{doctor.name}</CardTitle>
-              <p className="text-sm text-muted-foreground">{doctor.specialty}</p>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {doctor.bio && <p className="text-sm">{doctor.bio}</p>}
-              <BookingDialog doctor={doctor} />
-            </CardContent>
-          </Card>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {QUICK_LINKS.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className="flex items-center gap-3 rounded-lg border bg-card p-4 text-sm font-medium transition-colors hover:border-primary/40 hover:bg-primary/5"
+          >
+            <link.icon className="size-5 text-primary" />
+            {link.label}
+          </Link>
         ))}
       </div>
-    </div>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Upcoming appointments</CardTitle>
+          <Link href="/patient/appointments" className={buttonVariants({ variant: "link", size: "sm" })}>
+            View all
+          </Link>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {isLoading && <LoadingState />}
+          {error && <ErrorState message={error.message} />}
+          {appointments && upcoming.length === 0 && (
+            <EmptyState
+              icon={CalendarX}
+              title="No upcoming appointments"
+              description="Find a doctor and book your next visit."
+              action={
+                <Link href="/patient/doctors" className={buttonVariants({ size: "sm" })}>
+                  Find a doctor
+                </Link>
+              }
+            />
+          )}
+          {upcoming.slice(0, 3).map((a) => (
+            <PatientAppointmentCard key={a.id} appointment={a} doctor={findDoctor(a.doctorId)} />
+          ))}
+        </CardContent>
+      </Card>
+    </>
   );
 }
